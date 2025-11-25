@@ -10,8 +10,10 @@
   import utils from '@utils/utils.js';
   import { useFaMapService } from '@Composables/useFaMapservice.js';
   import DetailDrawer from './components/Utility/DetailDrawer.vue';
+  import { useToast } from 'vue-toastification';
 
   const { fontAwesomeCharacterCode } = useFaMapService();
+  const toast = useToast();
   const emptyGeoJson = {type:'geojson',data:{id: 'search-source', type: 'FeatureCollection', features: []}};
   const mbMap = ref({});
 
@@ -430,6 +432,23 @@
     showLanding.value = true;
   }
 
+  function focusFeature(feature) {
+    if (!feature || !mbMap.value) return;
+    const coords = feature.geometry?.coordinates;
+    if (Array.isArray(coords) && coords.length === 2) {
+      const numericCoords = coords.map((c) => Number(c));
+      if (numericCoords.every((c) => Number.isFinite(c))) {
+        mbMap.value.flyTo({ center: numericCoords, zoom: 17 });
+      }
+    }
+  }
+
+  function handleMissingFeature(item) {
+    const label = item?.address || item?.name || 'this result';
+    toast.dismiss('missing-feature');
+    toast.warning(`No map location available for ${label}.`, { id: 'missing-feature' });
+  }
+
 </script>
 
 <template>
@@ -537,7 +556,9 @@
       class="results-pane"
       :years="years"
       :year="appYear"
-      @update:geojson="handleGeojson">
+      @update:geojson="handleGeojson"
+      @focus-feature="focusFeature"
+      @focus-feature-missing="handleMissingFeature">
     </ResultsPane>
   </transition>
 </template>

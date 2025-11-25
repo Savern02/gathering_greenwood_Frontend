@@ -73,7 +73,7 @@ library.add(faSearch,
 
 const toastOptions = {
   position: "top-right",
-  timeout: 30000,
+  timeout: 3000,
   closeOnClick: true,
   pauseOnFocusLoss: false,
   pauseOnHover: false,

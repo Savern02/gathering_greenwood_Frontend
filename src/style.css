@@ -361,3 +361,35 @@ summary {
     background-color: var(--gcc-white);
   }
 }
+
+/* Keep toast notifications above drawers/modals */
+.Vue-Toastification__container {
+  z-index: 200000 !important;
+  pointer-events: none;
+}
+
+/* Match toast styling to app palette */
+.Vue-Toastification__toast {
+  background: var(--gcc-dk-green) !important;
+  color: var(--gcc-white) !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.Vue-Toastification__toast-body {
+  color: inherit !important;
+}
+
+.Vue-Toastification__progress-bar {
+  background: var(--gcc-orange) !important;
+}
+
+.Vue-Toastification__toast--warning {
+  background: var(--gcc-dk-green) !important;
+  border-color: var(--gcc-orange) !important;
+  color: var(--gcc-white) !important;
+}
+
+.Vue-Toastification__toast--warning .Vue-Toastification__toast-body {
+  color: var(--gcc-white) !important;
+}

@@ -15,6 +15,8 @@
     }
   });
 
+  const emit = defineEmits(['focus']);
+
   function formatCategory(key) {
     //var key = Object.keys(results.value)[index];
     return key === 'narratives' ? 'Stories' : key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ');
@@ -36,7 +38,9 @@
           v-for="item in results[category || '']"
           :key="item?.id || item?.name || item?.description || item?.story?.name"
           :item="item"
-          :category="category"></SearchResult>
+          :category="category"
+          @focus="emit('focus', $event)"
+        ></SearchResult>
       </ul>
     </section>
   </template>

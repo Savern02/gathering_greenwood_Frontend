@@ -41,7 +41,7 @@
       }).filter((key) => key !== null);
   });
 
-  const emit = defineEmits(['update:geojson', 'update:results']);
+  const emit = defineEmits(['update:geojson', 'update:results', 'focus-feature', 'focus-feature-missing']);
   const backendHost = import.meta.env.VITE_BACKEND_HOST;
 
   const searchTerm = ref('');
@@ -61,6 +61,31 @@
     results.value = ResultsJson.createEmpty();
     count.value = new Count();
     lastSearch.value = '';
+  }
+
+  function focusResult(item) {
+    if (!item || !geojson.value?.data?.features) return;
+    const features = geojson.value.data.features;
+    const targetId = item.id != null ? String(item.id) : null;
+
+    // Try to find by id (string-insensitive)
+    let feature = features.find((f) => {
+      const locId = f?.properties?.location_id;
+      const propId = f?.properties?.id;
+      return (locId != null && String(locId) === targetId) || (propId != null && String(propId) === targetId);
+    });
+
+    // Fallback: match by title/address if ids do not align
+    if (!feature && item.address) {
+      const targetAddr = item.address.trim();
+      feature = features.find((f) => (f?.properties?.title || '').trim() === targetAddr);
+    }
+
+    if (feature) {
+      emit('focus-feature', feature);
+    } else {
+      emit('focus-feature-missing', item);
+    }
   }
 
   defineExpose({
@@ -160,7 +185,12 @@
       <div class="spinner"></div>
     </div>
     <ResultsCount v-if="count" :count="count" :loading="loading" />
-    <ResultsList v-if="!loading && results" :results="results" :categories="orderedResults" />
+    <ResultsList
+      v-if="!loading && results"
+      :results="results"
+      :categories="orderedResults"
+      @focus="focusResult"
+    />
   </div>
 </template>
 

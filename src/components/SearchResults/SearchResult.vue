@@ -9,6 +9,8 @@
     category: String
   });
 
+  const emit = defineEmits(['focus']);
+
   const modalRef = ref(null);
 
   const modalHidden = ref(true);
@@ -24,6 +26,7 @@
     // modalRef.value?.openDialog();
     // modalHidden.value = false;
     showDrawer.value = true;
+    emit('focus', props.item);
   }
 
   function modalClose() {
