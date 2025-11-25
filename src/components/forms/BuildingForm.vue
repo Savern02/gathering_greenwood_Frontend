@@ -7,7 +7,26 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
 const props = defineProps({ item: {type: Object, required: true} });
 
-const formatLocation = (location) => {return location && location.every((coord) => coord) ? location.join(",") : 'Unknown'};
+const formatLocation = (location) => {
+  // Normalize strings like "[lon, lat]" into arrays
+  let coords = location;
+  if (typeof location === 'string') {
+    try {
+      coords = JSON.parse(location);
+    } catch {
+      return 'Unknown';
+    }
+  }
+
+  // Only treat numeric coordinate arrays as valid; everything else is unknown
+  if (Array.isArray(coords) && coords.length === 2) {
+    const numbers = coords.map((coord) => Number(coord));
+    if (numbers.every((coord) => Number.isFinite(coord))) {
+      return numbers.join(',');
+    }
+  }
+  return 'Unknown';
+};
 
 
 const people = props.item.properties?.people?.sort((a,b) => {
