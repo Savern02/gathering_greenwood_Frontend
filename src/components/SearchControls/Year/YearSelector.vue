@@ -72,9 +72,9 @@ onBeforeMount(() => {
 });
 
 onMounted(() => {
-  // Set the default year to the last year in the array
+  // Set the default year to the first year in the array (1910)
   //const defaultYear = years.value[years.value.length - 1].value;
-  const defaultYear = "1920";
+  const defaultYear = "1910";
   selected.value = defaultYear;
   var selector = `input[value="${defaultYear}"]`;
   var el = document.querySelector(selector);

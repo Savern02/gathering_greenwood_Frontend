@@ -27,7 +27,17 @@
   const showLanding = ref(true);
 
   const contrastMode = ref(false);
-  const searchSuggestions = ref([]);
+
+  // Featured buildings with verified addresses - always shown as suggestions
+  const featuredBuildings = [
+    'Stradford Hotel',
+    'E.A. Hardy Furnished Rooms',
+    'Nails Brothers Shoe Shop',
+    'Vernon AME Church',
+    'Dunbar Grade School'
+  ];
+
+  const searchSuggestions = ref([...featuredBuildings]);
 
   // define available years
   const years = [
@@ -393,8 +403,9 @@
         })
         .filter(Boolean);
 
+      // Keep featured buildings at the top, add POI data after
       searchSuggestions.value = utils.uniqueArray([
-        ...searchSuggestions.value,
+        ...featuredBuildings,
         ...poiNames,
         ...poiAddresses
       ]);
