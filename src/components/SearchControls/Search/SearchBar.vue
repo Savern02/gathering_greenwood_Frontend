@@ -5,13 +5,20 @@
   const searchValue = ref({});
   const input = ref('');
   const lastSearch = ref('');
+  const showSuggestions = ref(false);
 
   const props = defineProps({
     onSearch: {
       type: Function,
       required: true
+    },
+    suggestions: {
+      type: Array,
+      default: () => []
     }
   });
+
+  const datalistId = 'search-suggestions';
 
   function doSearch() {
     if (!input.value.trim()) return;
@@ -34,6 +41,20 @@
 
   function handleInputChange(event) {
     setQuery(event.target.value);
+  }
+
+  function handleFocus() {
+    showSuggestions.value = true;
+  }
+
+  function handleBlur() {
+    // Slight delay so clicks on suggestions still register
+    setTimeout(() => showSuggestions.value = false, 150);
+  }
+
+  function chooseSuggestion(suggestion) {
+    input.value = suggestion;
+    showSuggestions.value = false;
   }
 
   function handleClearClick() {
@@ -60,12 +81,32 @@
           id="search-input"
           @keyup.enter.native="doSearch"
           @onChange="handleInputChange"
+          :list="datalistId"
+          @focus="handleFocus"
+          @blur="handleBlur"
           aria-description="search results will appear above"
           type="search"
           placeholder="Search..."
           required
           autocomplete="on"
         />
+        <datalist :id="datalistId">
+          <option v-for="suggestion in props.suggestions" :key="suggestion" :value="suggestion" />
+        </datalist>
+        <ul
+          v-if="showSuggestions && props.suggestions.length"
+          class="suggestions"
+          role="listbox"
+        >
+          <li
+            v-for="suggestion in props.suggestions"
+            :key="suggestion"
+            role="option"
+            @mousedown.prevent="chooseSuggestion(suggestion)"
+          >
+            {{ suggestion }}
+          </li>
+        </ul>
       </div>
       <button id="search-button" @click="doSearch" @keyup.enter="doSearch" aria-label="search">
         <FontAwesomeIcon icon="search" transform="grow-40 right-4" title="Perform Search"/>
@@ -98,6 +139,7 @@
       padding-right: 0.3rem;
       display: inline-block;
       border-radius: 0.625rem;
+      position: relative;
     }
 
     .input input {
@@ -114,6 +156,35 @@
     input[type="search"]::-webkit-search-cancel-button {
       -webkit-appearance: none;
       appearance: none;
+    }
+
+    .suggestions {
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      right: 0;
+      background: var(--gcc-white);
+      color: var(--gcc-dk-green);
+      border: 1px solid var(--gcc-dk-green);
+      border-radius: 0.5rem;
+      margin: 0 0 0.25rem 0;
+      padding: 0.25rem 0;
+      list-style: none;
+      max-height: 14rem;
+      overflow-y: auto;
+      z-index: 100000;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    }
+
+    .suggestions li {
+      padding: 0.4rem 0.75rem;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .suggestions li:hover,
+    .suggestions li:focus {
+      background: var(--gcc-v-lt-green);
     }
 
     .clear-search {

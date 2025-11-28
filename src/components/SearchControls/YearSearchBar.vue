@@ -19,6 +19,10 @@
       type: Function,
       required: true
     },
+    suggestions: {
+      type: Array,
+      default: () => []
+    }
   });
 
   const emits = defineEmits(['clear']);
@@ -46,7 +50,7 @@
 <template>
   <div class="year-search-bar">
     <YearSelector :onYearChange="props.onYearChange" :yearArray="props.years"/>
-    <SearchBar ref="searchBarRef" @clear="emitClear" :onSearch="props.onSearch"/>
+    <SearchBar ref="searchBarRef" @clear="emitClear" :onSearch="props.onSearch" :suggestions="props.suggestions"/>
   </div>
 </template>
 

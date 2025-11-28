@@ -27,6 +27,7 @@
   const showLanding = ref(true);
 
   const contrastMode = ref(false);
+  const searchSuggestions = ref([]);
 
   // define available years
   const years = [
@@ -373,6 +374,30 @@
       let features = utils.dedupeByCustomKey(data.features, feature => feature.properties.location_id);
       poiGeoJSONTemplate.data.features = features;
       poiGeoJSON.value = poiGeoJSONTemplate;
+
+      const poiNames = features
+        .map((f) => f?.properties?.title)
+        .filter(Boolean);
+
+      const poiAddresses = features
+        .flatMap((f) => f?.properties?.addresses || [])
+        .map((addr) => {
+          const parts = [
+            addr.house_number,
+            addr.prefix,
+            addr.name,
+            addr.suffix,
+            addr.city
+          ].filter(Boolean);
+          return parts.join(' ').replace(/\s+/g, ' ').trim();
+        })
+        .filter(Boolean);
+
+      searchSuggestions.value = utils.uniqueArray([
+        ...searchSuggestions.value,
+        ...poiNames,
+        ...poiAddresses
+      ]);
     })
     .then(() => {
       utils.delayedAction(
@@ -465,7 +490,14 @@
   </FABMain>
 
   <!-- YearSelector Component to change year and perform searches -->
-  <YearSearchBar ref="yearSearchBarRef" @clear="clearResults" :onSearch="handleSearch" :onYearChange="updateYear" :years="years"></YearSearchBar>
+  <YearSearchBar
+    ref="yearSearchBarRef"
+    @clear="clearResults"
+    :onSearch="handleSearch"
+    :onYearChange="updateYear"
+    :years="years"
+    :suggestions="searchSuggestions"
+  ></YearSearchBar>
 
   <!-- Map Component with layer containing dynamic GeoJSON search results-->
   <MglMap nonce="ajJERjdDc1g5MlFadlZfdGdFIWI4dVchQ3o4Q3ZRYlQ=" :class="['map-area', { 'map-area-shrunk' : showResults }]" :year="appYear" ref="mglMapRef" @created="handleMapCreated" :dynamicGeoJsonIds="{'dynamicLayers': dynamicLayers, 'dynamicSources': dynamicSources}">
