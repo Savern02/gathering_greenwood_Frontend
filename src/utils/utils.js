@@ -89,7 +89,7 @@ export function formatRawGeoJson(rawGeoJson, id='search-source', inject_year=nul
       console.warn('Feature geometry type is invalid or missing, skipping:', feature);
       return false;
     }
-    if (!feature.geometry.coordinates || !Array.isArray(feature.geometry.coordinates) || feature.geometry.coordinates.some(coord => coord === null || Number.isNaN(coord)) || feature.geometry.coordinates.some(coords => Array.IsArray && coords.some(c => c === null|| !Number.isNaN(c)))) {
+    if (!feature.geometry.coordinates || !Array.isArray(feature.geometry.coordinates) || feature.geometry.coordinates.some(coord => coord === null || Number.isNaN(coord))) {
       console.warn('Feature geometry coordinates are invalid or missing, skipping:', feature);
       return false;
     }
@@ -120,13 +120,15 @@ export function formatRawGeoJson(rawGeoJson, id='search-source', inject_year=nul
     return true;
   }).map(feature => {
     if (feature.geometry.coordinates.every(coord => Array.isArray(coord))) {
-      feature.geometry.coordinates = feature.geometry.coordinates.map(coords => coords.map(coord => coord.parseFloat(coord)));
+      feature.geometry.coordinates = feature.geometry.coordinates.map(coords => coords.map(coord => parseFloat(coord)));
     }
     else {
       feature.geometry.coordinates = feature.geometry.coordinates.map(coord => parseFloat(coord));
     }
     return feature;
   });
+
+  console.log(`formatRawGeoJson: Processed ${rawGeoJson.features.length} features`);
 
   return {
     type: 'geojson',

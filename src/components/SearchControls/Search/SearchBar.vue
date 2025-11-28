@@ -55,6 +55,7 @@
   function chooseSuggestion(suggestion) {
     input.value = suggestion;
     showSuggestions.value = false;
+    doSearch();
   }
 
   function handleClearClick() {

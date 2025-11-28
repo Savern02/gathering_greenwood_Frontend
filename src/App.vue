@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, computed, useTemplateRef, onMounted, inject, onUpdated, nextTick } from 'vue';
+  import { ref, computed, useTemplateRef, onMounted, inject, onUpdated, nextTick, watch } from 'vue';
   import MglMap from '@/components/Map/MglMap.vue';
   import FABMain from '@FAB/FABMain.vue';
   import FABButton from '@FAB/FABButton.vue';
@@ -28,13 +28,17 @@
 
   const contrastMode = ref(false);
 
-  // Featured buildings with verified addresses - always shown as suggestions
+  // Featured buildings with verified addresses and coordinates - shown as suggestions
   const featuredBuildings = [
     'Stradford Hotel',
+    'Vernon AME Church',
+    'Tulsa Star',
+    'Dunbar Grade School',
+    'Williams Confectionery',
+    'Gurley Hotel & Busy Bee Café',
+    'The Oklahoma Sun',
     'E.A. Hardy Furnished Rooms',
     'Nails Brothers Shoe Shop',
-    'Vernon AME Church',
-    'Dunbar Grade School'
   ];
 
   const searchSuggestions = ref([...featuredBuildings]);
@@ -239,6 +243,7 @@
 
   function handleGeojson(newGeojson) {
     if (mglMapRef.value) {
+      console.log('handleGeojson: Setting geoJson with', newGeojson?.data?.features?.length || 0, 'features');
       geoJson.value = newGeojson;
       //mglMapRef.value.loadDynamicLayer(newGeojson);
     }
@@ -386,28 +391,18 @@
       poiGeoJSON.value = poiGeoJSONTemplate;
 
       const poiNames = features
-        .map((f) => f?.properties?.title)
-        .filter(Boolean);
-
-      const poiAddresses = features
-        .flatMap((f) => f?.properties?.addresses || [])
-        .map((addr) => {
-          const parts = [
-            addr.house_number,
-            addr.prefix,
-            addr.name,
-            addr.suffix,
-            addr.city
-          ].filter(Boolean);
-          return parts.join(' ').replace(/\s+/g, ' ').trim();
+        .map((f) => {
+          let title = f?.properties?.title;
+          if (!title) return null;
+          title = title.replace(/\s*\([^)]*\)/g, '').trim();
+          const isAddress = /\b(Street|Ave|Avenue|Road|Rd|Boulevard|Blvd|Lane|Dr|Drive)\b/i.test(title);
+          return isAddress ? null : title;
         })
         .filter(Boolean);
 
-      // Keep featured buildings at the top, add POI data after
       searchSuggestions.value = utils.uniqueArray([
         ...featuredBuildings,
-        ...poiNames,
-        ...poiAddresses
+        ...poiNames
       ]);
     })
     .then(() => {
@@ -485,6 +480,15 @@
     toast.warning(`No map location available for ${label}.`, { id: 'missing-feature' });
   }
 
+  // Debug: Watch geoJson changes
+  watch(geoJson, (newVal) => {
+    console.log('🔍 geoJson changed:', {
+      hasData: !!newVal?.data,
+      featureCount: newVal?.data?.features?.length || 0,
+      firstFeature: newVal?.data?.features?.[0] || null
+    });
+  }, { deep: true });
+
 </script>
 
 <template>
@@ -515,6 +519,7 @@
   <!-- <MglMap :year="appYear" ref="mglMapRef" @created="handleMapCreated" :dynamicGeoJsonIds="{'dynamicLayers': dynamicLayers, 'dynamicSources': dynamicSources}" :paintOptions="markerPaintOptions"> -->
     <DynamicGeoJsonLayer
       v-if="geoJson && geoJson.data && geoJson.data.features && geoJson.data.features.length > 0"
+      ref="searchLayerRef"
       :geojson="geoJson"
       :type="'circle'"
       :paint="markerPaintOptions['Search Results']"
@@ -524,6 +529,10 @@
       :map="mbMap"
       :featureFormatter="formatFeature">
     </DynamicGeoJsonLayer>
+    <!-- Debug info for search layer -->
+    <div v-if="false">
+      Search Layer Debug: {{ geoJson?.data?.features?.length || 0 }} features
+    </div>
     <DynamicGeoJsonLayer
       v-if="poiGeoJSON && poiGeoJSON.data && poiGeoJSON.data.features && poiGeoJSON.data.features.length > 0"
       ref="POILayerRef"

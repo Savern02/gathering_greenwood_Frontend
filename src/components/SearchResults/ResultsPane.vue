@@ -166,6 +166,11 @@
       geojson.value = formatRawGeoJson(geoJsonResponse.value.results);
       lastSearch.value = searchTerm.value;
 
+      console.log('📤 ResultsPane emitting geojson:', {
+        featureCount: geojson.value?.data?.features?.length || 0,
+        geojson: geojson.value
+      });
+
       emit('update:geojson', geojson.value);
       emit('update:results', results.value);
     } catch (err) {

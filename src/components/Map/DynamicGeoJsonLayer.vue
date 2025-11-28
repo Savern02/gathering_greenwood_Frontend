@@ -97,7 +97,7 @@ import DetailDrawer from '../Utility/DetailDrawer.vue';
   // Conditionally apply filter based on string year
   const layerDefinition = computed(() => {
     const includeSearch = props.layerId.includes("search");
-    const YearExemptLayers = ['1920-burned-area-layer', 'poi-layer', '1920-street-layer', '1920-building-layer'];
+    const YearExemptLayers = ['1920-burned-area-layer', 'poi-layer', '1920-street-layer', '1920-building-layer', 'search-layer'];
     const hasYear = props.filterYear && utils.isYear(props.filterYear);
     const hasSearchTerm = !!props.searchTerm && includeSearch;
 
