@@ -219,8 +219,8 @@
 
   div.mapboxgl-ctrl-group button[class^=mapboxgl-ctrl-] {
     background-color: var(--gcc-dk-green);
-    width: 4rem;
-    height: 6rem;
+    width: 3rem;
+    height: 5rem;
   }
 
   div.mapboxgl-ctrl-group button[class^=mapboxgl-ctrl-] span.mapboxgl-ctrl-icon {
@@ -308,10 +308,4 @@
     right: 0;
   }
 
-  @media (max-width: 2500px) and (max-height: 1400px) {
-    .mapboxgl-ctrl-bottom-right {
-      bottom: 9.7rem;
-      right: 0;
-    }
-  }
 </style>

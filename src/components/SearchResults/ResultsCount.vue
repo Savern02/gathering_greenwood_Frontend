@@ -41,15 +41,10 @@
 <style scoped>
   .results-count {
     margin-bottom: 0;
-    font-size: 1.95rem;
+    font-size: 1rem;
     font-weight: bold;
     color: var(--gcc-dk-green);
     font-style: italic;
   }
 
-  @media screen and (max-width: 1930px) and (max-height: 1090px) {
-    .results-count {
-      font-size: 1.5rem;
-    }
-  }
 </style>

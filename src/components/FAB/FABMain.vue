@@ -14,7 +14,7 @@
 <style scoped>
   .fab {
     position: fixed;
-    bottom: 12rem;
+    bottom: 1rem;
     left: 1rem;
     z-index: 10;
   }
@@ -28,18 +28,20 @@
     cursor: pointer;
     font-weight: bold;
     font-size: 2rem;
-    width: 9rem;
-    height: 9rem;
+    width: 5rem;
+    height: 5rem;
     position: relative;
     z-index: 10;
   }
 
   .fabButton img {
     position: absolute;
-    top: 9%;
-    left: 15%;
-    width: 6.3rem;
-    height: 6.3rem;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    height: 60%;
+    object-fit: contain;
   }
 
   .fabToggle {
@@ -72,12 +74,4 @@
     text-align: center;
   }
 
-  @media (max-width: 2500px) and (max-height: 1400px) {
-    .fab {
-      position: fixed;
-      bottom: 1rem;
-      left: 1rem;
-      z-index: 10;
-    }
-  }
 </style>

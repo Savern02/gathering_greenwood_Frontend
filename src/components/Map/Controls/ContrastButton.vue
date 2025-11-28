@@ -77,9 +77,9 @@ div.mapboxgl-ctrl-custom button.custom-mapbox-contrast {
   cursor: pointer;
   box-shadow: 0 0.0625rem 0.25rem rgba(0, 0, 0, 0.1);
   border-radius: var(--gcc-border-radius) var(--gcc-border-radius) var(--gcc-border-radius) var(--gcc-border-radius);
-  font-size: 2.5rem;
-  width: 4rem;
-  height: 6rem;
+  font-size: 2rem;
+  width: 3rem;
+  height: 5rem;
   padding: 0;
 }
 </style>

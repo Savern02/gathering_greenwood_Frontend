@@ -61,7 +61,7 @@
   align-items: center;
   position:absolute;
   right:0;
-  padding: 3rem;
+  padding: 1rem 1rem 3rem 1rem;
   bottom: -2rem;
   border-top-left-radius: 10px;
   background-color: var(--gcc-dk-green);

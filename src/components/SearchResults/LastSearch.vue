@@ -19,7 +19,7 @@ defineProps({
 
 	.search-label {
       margin-right: auto;
-      font-size: 2rem;
+      font-size: 1rem;
       font-weight: 700;
       color: #000000;
       background-color: var(--gcc-v-lt-green);
@@ -27,11 +27,5 @@ defineProps({
       flex-grow: 1;
       padding: 1rem;
       letter-spacing: 0.5px;
-    }
-
-    @media screen and (max-width: 1930px) and (max-height: 1090px) {
-      .search-label {
-        font-size: 1.5rem;
-      }
     }
 </style>

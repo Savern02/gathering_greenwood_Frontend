@@ -1,5 +1,5 @@
 <script setup>
-  import { ref, onMounted, onUpdated } from 'vue';
+  import { ref, onMounted, onUpdated, watch } from 'vue';
   import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
   const searchValue = ref({});
@@ -43,9 +43,17 @@
   }
 
   function handleInputChange(event) {
-    userHasInteracted.value = true;
-    showSuggestions.value = true;
+    // Handle input changes if needed
   }
+
+  // Watch for when input is cleared (including via native clear button)
+  watch(input, (newValue, oldValue) => {
+    if (oldValue && !newValue) {
+      // Input was cleared
+      searchValue.value = {};
+      emits('clear');
+    }
+  });
 
   function handleFocus() {
     // Only show suggestions if user has actually interacted with the input
@@ -71,9 +79,9 @@
     doSearch();
   }
 
-  function handleClearClick() {
-    clearSearch();
-    emits('clear');
+  function handleSearchClear(event) {
+    // Native search clear button was clicked
+    // The watcher will handle emitting the clear event
   }
 
   // Component Lifecycle Hooks
@@ -94,7 +102,8 @@
           v-model="input"
           id="search-input"
           @keyup.enter.native="doSearch"
-          @input="handleInputChange"
+          @onChange="handleInputChange"
+          @search="handleSearchClear"
           :list="datalistId"
           @click="handleClick"
           @focus="handleFocus"
@@ -124,10 +133,7 @@
         </ul>
       </div>
       <button id="search-button" @click="doSearch" @keyup.enter="doSearch" aria-label="search">
-        <FontAwesomeIcon icon="search" transform="grow-40 right-4" title="Perform Search"/>
-      </button>
-      <button type="button" v-if="input" class="clear-search" @click="handleClearClick">
-        <FontAwesomeIcon icon="times" transform="grow-40" title="Clear Search"/>
+        <FontAwesomeIcon icon="search" transform="grow-20 right-4" title="Perform Search"/>
       </button>
     </span>
   </div>
@@ -142,12 +148,15 @@
     }
 
     .input-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
       padding: 1rem 0 1rem 1rem;
       background-color: var(--gcc-dk-green);
+      position: relative;
     }
 
     .input {
-      background: black;
       padding-top: 0.1rem;
       padding-bottom: 0.1rem;
       padding-left: 0.3rem;
@@ -158,19 +167,25 @@
     }
 
     .input input {
-      padding: 0.4rem 0.6rem;
       background-color: var(--gcc-white);
       border-radius: 0.625rem;
       border: none;
       color: var(--gcc-dk-green);
-      padding: 0.1875rem;
-      font-size: 2rem;
+      padding: 0.2rem 0rem 0.2rem 0.5rem;
+      font-size: 1rem;
       text-indent: 0.5rem;
     }
 
+    /* Style the native search clear button */
     input[type="search"]::-webkit-search-cancel-button {
-      -webkit-appearance: none;
-      appearance: none;
+      -webkit-appearance: searchfield-cancel-button;
+      cursor: pointer;
+      margin-right: 0.5rem;
+    }
+
+    /* For Firefox */
+    input[type="search"]::-moz-search-clear-button {
+      cursor: pointer;
     }
 
     .suggestions {
@@ -202,35 +217,16 @@
       background: var(--gcc-v-lt-green);
     }
 
-    .clear-search {
-      position: absolute;
-      transform: translateY(32%);
-      right: 7.75rem;
-      width: 2.2rem;
-      height: 2rem;
-      padding: 0;
-      background: none;
-      border-radius: unset;
-      border: none;
-      cursor: pointer;
-    }
-
-    @media screen and (max-width: 1930px) and (max-height: 1090px) {
-      input {
-        width: 20rem;
-      }
-      .search-bar>div {
-        margin-left: 1rem;}
-    }
-
     button#search-button {
+      flex-shrink: 0;
       background: none;
       border-radius: unset;
       border: none;
       cursor: pointer;
-      width: 4rem;
-      height: 3.2rem;
-      padding: 0;
-      transform: translateY(-0.5rem);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateY(0.2rem);
     }
 </style>

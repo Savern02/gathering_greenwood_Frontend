@@ -67,30 +67,9 @@
     margin-top: 1.5rem;
     margin-bottom: 0.5rem;
     font-weight: 700;
-    font-size: 2.5rem;
+    font-size: 1rem;
     text-align: start;
     padding-bottom: 0.25rem;
   }
 
-  @media screen and (max-width: 1930px) and (max-height: 1090px) {
-    .category-title {
-      font-size: 1.7rem;
-      margin-bottom: 0.1rem;
-    }
-
-    .results-list {
-      height: 72%;
-    }
-  }
-/*
-  @media screen and (max-height: 700px) {
-    .category-title {
-      font-size: 1.7rem;
-      margin-bottom: 0.1rem;
-    }
-
-    .results-list {
-      height: 68%;
-    }
-  } */
 </style>
