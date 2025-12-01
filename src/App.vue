@@ -269,14 +269,14 @@
     if (!mbMap.value || !poiFootprintsGeoJSON.value?.data?.features?.length) {
       return;
     }
-    
+
     try {
       // Check if layer exists before updating
       const layer = mbMap.value.getLayer('poi-footprints-layer');
       if (!layer) {
         return;
       }
-      
+
       const fillColor = [
         'case',
         ['==', ['get', 'building_id'], highlightedBuildingId.value || -1],
@@ -289,7 +289,7 @@
         0.9,   // More opaque when highlighted
         0.6    // Semi-transparent normally
       ];
-      
+
       mbMap.value.setPaintProperty('poi-footprints-layer', 'fill-color', fillColor);
       mbMap.value.setPaintProperty('poi-footprints-layer', 'fill-opacity', fillOpacity);
     } catch (error) {
@@ -483,9 +483,11 @@
       ]);
     })
     .then(() => {
-      utils.delayedAction(
-          poiLayerRef.value.fitMapToMarkers,
-          1000);
+      utils.delayedAction(() => {
+        if (poiLayerRef.value && typeof poiLayerRef.value.fitMapToMarkers === 'function') {
+          poiLayerRef.value.fitMapToMarkers();
+        }
+      }, 1000);
     })
   };
 
