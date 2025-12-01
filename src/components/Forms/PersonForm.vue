@@ -3,7 +3,8 @@
 const props = defineProps({ item: {type: Object, required: true} });
 
 const census_records = () => {
-  return props.item.properties?.census_records?.sort((a,b) => {
+  const records = props.item.properties?.census_records || props.item.census_records || [];
+  return records.sort((a,b) => {
     const nameA = a?.sortable_name?.toUpperCase();
     const nameB = b?.sortable_name?.toUpperCase();
     if (nameA < nameB) {
@@ -13,7 +14,7 @@ const census_records = () => {
         return 1;
     }
     return 0;
-}) || [];
+  });
 };
 
 function getreadablePersonId(notes) {
