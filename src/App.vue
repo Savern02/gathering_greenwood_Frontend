@@ -114,8 +114,8 @@
       'fill-opacity': 1
     },
     poiFootprintsPaint : {
-      'fill-color': '#FFCC00',    // Yellow when highlighted (updated via setPaintProperty)
-      'fill-opacity': 0,          // Invisible by default, shown only when building is clicked
+      'fill-color': '#f37021',   // Orange for POIs (updated via setPaintProperty)
+      'fill-opacity': 0,          // Start invisible, updated via setPaintProperty when building clicked
       'fill-outline-color': '#ffffff'
     },
     burnedAreaPaint : {
@@ -290,17 +290,18 @@
         return;
       }
 
+      // Only show footprint when a specific building is highlighted
       const fillColor = [
         'case',
         ['==', ['get', 'building_id'], highlightedBuildingId.value || -1],
         '#FFCC00',  // Yellow when highlighted
-        '#f37021'   // Orange (only visible when highlighted, since opacity is 0 otherwise)
+        '#f37021'   // Orange (default, but opacity will be 0 when not highlighted)
       ];
       const fillOpacity = [
         'case',
         ['==', ['get', 'building_id'], highlightedBuildingId.value || -1],
         0.9,   // Opaque when highlighted
-        0      // Invisible when not highlighted
+        0      // Invisible when not highlighted (prevents orange showing on load)
       ];
 
       mbMap.value.setPaintProperty('poi-footprints-layer', 'fill-color', fillColor);
@@ -570,14 +571,13 @@
         ...poiNames
       ]);
     })
-    // Removed auto-zoom to POI markers on load - map should stay at initial bounds
-    // .then(() => {
-    //   utils.delayedAction(() => {
-    //     if (poiLayerRef.value && typeof poiLayerRef.value.fitMapToMarkers === 'function') {
-    //       poiLayerRef.value.fitMapToMarkers();
-    //     }
-    //   }, 1000);
-    // })
+    .then(() => {
+      utils.delayedAction(() => {
+        if (poiLayerRef.value && typeof poiLayerRef.value.fitMapToMarkers === 'function') {
+          poiLayerRef.value.fitMapToMarkers();
+        }
+      }, 1000);
+    })
   };
 
   async function getBuildings() {
