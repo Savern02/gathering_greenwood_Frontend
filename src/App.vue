@@ -75,7 +75,7 @@
     }
   ];
 
-  const markerPaintOptions = {
+  const markerPaintOptions = computed(() => ({
     'Search Results' : {
       'circle-color': '#f37021',
       'circle-opacity': 1,
@@ -106,6 +106,21 @@
       'fill-color': '#666666',
       'fill-opacity': 1
     },
+    poiFootprintsPaint : {
+      'fill-color': [
+        'case',
+        ['==', ['get', 'building_id'], highlightedBuildingId.value || -1],
+        '#FFCC00',  // Yellow when highlighted
+        '#f37021'   // Orange for all POIs
+      ],
+      'fill-opacity': [
+        'case',
+        ['==', ['get', 'building_id'], highlightedBuildingId.value || -1],
+        0.9,   // More opaque when highlighted
+        0.6    // Semi-transparent normally
+      ],
+      'fill-outline-color': '#ffffff'
+    },
     burnedAreaPaint : {
       'fill-color': '#FF0000',
       'fill-opacity': 0.2
@@ -114,8 +129,7 @@
       'line-color': '#000000',
       'line-width': 2
     }
-
-  }
+  }));
 
   // Create an array of FAB button properties
   //  based on the custom properties defined above
@@ -154,6 +168,8 @@
   const backendHost = import.meta.env.VITE_BACKEND_HOST;
   const poiGeoJSON = ref(emptyGeoJson);
   const building1920GeoJSON = ref(emptyGeoJson);
+  const poiFootprintsGeoJSON = ref(emptyGeoJson);
+  const highlightedBuildingId = ref(null);
   const street1920GeoJSON = ref(emptyGeoJson);
   const burnedAreaGeoJSON = ref(emptyGeoJson);
 
@@ -187,6 +203,7 @@
   const dynamicSources = [
     "search-source",
     "poi-source",
+    "poi-footprints-source",
     "1920-building-source",
     "1920-street-source",
     "1920-burned-area-source",
@@ -244,6 +261,15 @@
     console.log('Toggle high contrast mode');
   }
 
+  // Building Highlighting Functions
+  function highlightBuilding(buildingId) {
+    highlightedBuildingId.value = buildingId;
+  }
+
+  function clearHighlight() {
+    highlightedBuildingId.value = null;
+  }
+
   // Event Handlers
   // Functions to handle events from child components
 
@@ -298,6 +324,7 @@
     mbMap.value = mapbMap;
     await getPOIs();
     await getBuildings();
+    await getPOIFootprints();
     await getStreets();
     await getBurnedArea();
 
@@ -448,6 +475,20 @@
     }
   };
 
+  async function getPOIFootprints() {
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}poi-footprints.geojson`);
+      const data = await response.json();
+      poiFootprintsGeoJSON.value = {
+        type: 'geojson',
+        data: data
+      };
+      poiFootprintsGeoJSON.value.data.id = 'poi-footprints-source';
+    } catch (error) {
+      console.error('Error loading POI footprints:', error);
+    }
+  };
+
   async function getStreets() {
     try {
       const response = await fetch(`${import.meta.env.BASE_URL}tulsa-roads.geojson`);
@@ -487,6 +528,12 @@
 
   function focusFeature(feature) {
     if (!feature || !mbMap.value) return;
+    
+    // Highlight building if it has an ID
+    if (feature.properties?.id || feature.id) {
+      highlightBuilding(feature.properties?.id || feature.id);
+    }
+    
     const coords = feature.geometry?.coordinates;
     if (Array.isArray(coords) && coords.length === 2) {
       const numericCoords = coords.map((c) => Number(c));
@@ -510,6 +557,7 @@
 
   async function handleDetailDrawerClose() {
     // Clear search results and reset map when detail drawer closes
+    clearHighlight();
     await clearResults();
     resetMapView();
   }
@@ -592,6 +640,19 @@
       :map="mbMap"
       :featureFormatter="formatFeature"
       :searchTerm="searchTerm"
+    </DynamicGeoJsonLayer>
+    <DynamicGeoJsonLayer
+      v-if="poiFootprintsGeoJSON && poiFootprintsGeoJSON.data && poiFootprintsGeoJSON.data.features && poiFootprintsGeoJSON.data.features.length > 0"
+      ref="poiFootprintsLayerRef"
+      :geojson="poiFootprintsGeoJSON"
+      :type="'fill'"
+      :paint="markerPaintOptions['poiFootprintsPaint']"
+      :layout="{ 'visibility': 'visible' }"
+      layerId="poi-footprints-layer"
+      :filterYear="appYear"
+      :map="mbMap"
+      :featureFormatter="formatFeature"
+      @drawer-closed="clearHighlight">
     </DynamicGeoJsonLayer>
     <DynamicGeoJsonLayer
       v-if="street1920GeoJSON && street1920GeoJSON.data && street1920GeoJSON.data.features && street1920GeoJSON.data.features.length > 0"
