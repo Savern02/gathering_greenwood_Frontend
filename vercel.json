@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/proxy?path=:path*"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/admin",
+      "destination": "http://172.232.24.146/u/sign_in",
+      "permanent": false
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "http://172.232.24.146/:path*",
+      "permanent": false
+    }
+  ]
+}

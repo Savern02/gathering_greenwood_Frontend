@@ -186,7 +186,7 @@ const processedItem = computed(() => {
 
 </script>
 <template>
-  <Drawer v-model="detailOpen" position="right" :overlay="true" width="40vw">
+  <Drawer v-model="detailOpen" position="right" :overlay="true" width="30vw">
     <template v-if="detailOpen && processedItem">
       <div :class="['modal-body', ScrollbarCss.scrollbar]">
         <component
@@ -220,7 +220,8 @@ const processedItem = computed(() => {
   height: 85%;
   padding: 1rem;
   overflow-y: auto;
-  line-height: 1;
+  line-height: 1.5;
+  font-size: 0.9rem;
 }
 
 .unknown-type-message {
@@ -279,6 +280,9 @@ const processedItem = computed(() => {
 
 .modal-body :deep(h3) {
   color: var(--gcc-dk-green);
+  font-size: 1.1rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .modal-body :deep(summary h3),
@@ -288,7 +292,76 @@ const processedItem = computed(() => {
   display: inline;
 }
 
+.modal-body :deep(h4) {
+  font-size: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.modal-body :deep(h5) {
+  font-size: 0.95rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0.3rem;
+}
+
+.modal-body :deep(h6) {
+  font-size: 0.9rem;
+  margin-top: 0.3rem;
+  margin-bottom: 0.25rem;
+}
+
 .modal-body :deep(p), .modal-body :deep(img) {
   color: var(--gcc-black);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.modal-body :deep(strong) {
+  font-weight: 600;
+}
+
+.modal-body :deep(details) {
+  margin-bottom: 0.75rem;
+}
+
+.modal-body :deep(summary) {
+  cursor: pointer;
+  padding: 0.4rem 0;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.modal-body :deep(summary:hover) {
+  color: var(--gcc-dk-green);
+}
+
+.modal-body :deep(hr) {
+  margin: 1rem 0;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1024px) {
+  /* On tablets and smaller, make drawer slightly wider */
+  .modal-body {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 640px) {
+  /* On mobile, font can be even smaller since drawer is full width */
+  .modal-body {
+    font-size: 0.8rem;
+  }
+  
+  .modal-body :deep(h3) {
+    font-size: 1rem;
+  }
+  
+  .modal-body :deep(h4) {
+    font-size: 0.9rem;
+  }
 }
 </style>

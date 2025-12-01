@@ -104,7 +104,7 @@ import DetailDrawer from '../Utility/DetailDrawer.vue';
   // Conditionally apply filter based on string year
   const layerDefinition = computed(() => {
     const includeSearch = props.layerId.includes("search");
-    const YearExemptLayers = ['1920-burned-area-layer', 'poi-layer', '1920-street-layer', '1920-building-layer', 'search-layer'];
+    const YearExemptLayers = ['1920-burned-area-layer', 'poi-layer', 'poi-footprints-layer', '1920-street-layer', '1920-building-layer', 'search-layer'];
     const hasYear = props.filterYear && utils.isYear(props.filterYear);
     const hasSearchTerm = !!props.searchTerm && includeSearch;
 
@@ -177,26 +177,58 @@ const popupProps = ref(null);
       console.warn('featureFormatter is not a valid function, using default formatter.');
       props.featureFormatter = (feature) => feature;
     }
-    clickedfeature.value = props.featureFormatter(e.features[0]);
+    // Wait for feature to be fully formatted (includes API calls for POI details)
+    const formattedFeature = await props.featureFormatter(e.features[0]);
+
+    // Verify we have valid data before proceeding
+    if (!formattedFeature || !formattedFeature.properties) {
+      console.warn('Feature formatter returned invalid data - skipping drawer open');
+      return;
+    }
+
+    // Only set clickedfeature if we have complete, valid data
+    clickedfeature.value = formattedFeature;
+
+    // Get center coordinates based on geometry type
+    const geomType = clickedfeature.value.geometry?.type;
+    const coords = clickedfeature.value.geometry?.coordinates;
+    let centerCoords;
+
+    if (geomType === 'Point' && Array.isArray(coords) && coords.length === 2) {
+      // Point geometry - use coordinates directly
+      centerCoords = coords;
+    } else if (geomType === 'Polygon' && Array.isArray(coords) && coords[0] && coords[0][0]) {
+      // Polygon geometry - calculate centroid
+      const points = coords[0]; // Get outer ring
+      let sumLng = 0, sumLat = 0;
+      for (const point of points) {
+        sumLng += point[0];
+        sumLat += point[1];
+      }
+      centerCoords = [sumLng / points.length, sumLat / points.length];
+    } else {
+      console.warn('Unknown geometry type or invalid coordinates:', geomType);
+      return;
+    }
+
+    // Fly to location first
     props.map.flyTo({
-      center: clickedfeature.value.geometry.coordinates,
-      zoom: 16,
+      center: centerCoords,
+      zoom: geomType === 'Polygon' ? 18 : 16,
       speed: 1.2,
       curve: 1.5,
       easing: (t) => t
     });
-    // var open = detailRef.value?.openDialog;
-    var open = showDetails;
 
-    // new MglPopup({
-    //   closeButton: true,
-    //   closeOnClick: false,
-    //   coordinates: clickedfeature.value.geometry.coordinates,
-    //   anchor: 'top',
-    //   offset: [0, -20],
-
-    // })
-    await utils.delayedAction(open, 1300); // Open dialog with a delay
+    // Wait for map animation to complete AND ensure data is ready
+    await utils.delayedAction(() => {
+      // Double-check data is still valid before opening
+      if (clickedfeature.value && clickedfeature.value.properties) {
+        showDetails();
+      } else {
+        console.warn('Clicked feature data lost before drawer opened');
+      }
+    }, 1300);
   }
 
   function openPopup()

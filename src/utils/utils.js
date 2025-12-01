@@ -32,6 +32,7 @@ export async function hashString(str) {
 };
 
 export function titleCase(s) {
+  if (!s || typeof s !== 'string') return '';
   return s.toLowerCase()
           .split(' ')
           .map(word => capitalize(word))

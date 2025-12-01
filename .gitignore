@@ -172,3 +172,10 @@ src/components/DrawerExample.vue
 src/components/Utility/DetailDrawer.test.js
 
 src/components/Utility/DetailDrawerExample.vue
+
+# Deployment documentation (keep in parent GCC directory only)
+DEPLOYMENT*.md
+PUSH_TO_GITHUB.md
+DEPLOY_NOW.md
+FIX_SSH*.md
+

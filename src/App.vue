@@ -30,15 +30,22 @@
 
   // Featured buildings with verified addresses and coordinates - shown as suggestions
   const featuredBuildings = [
-    'Stradford Hotel',
     'Vernon AME Church',
-    'Tulsa Star',
-    'Dunbar Grade School',
-    'Williams Confectionery',
-    'Gurley Hotel & Busy Bee Café',
-    'The Oklahoma Sun',
     'E.A. Hardy Furnished Rooms',
     'Nails Brothers Shoe Shop',
+    'Tulsa Star',
+    'Williams Confectionery',
+    'Stradford Hotel',
+    'Gurley Hotel & Busy Bee Café',
+    'Dunbar Grade School',
+    'The Oklahoma Sun',
+    'Williams Dreamland Theatre',
+    'Belle & Little Café',
+    'Dr. A. C. Jackson Home',
+    'Booker T. Washington High School',
+    'Red Wing Drug Store',
+    'Little Rose Beauty Salon',
+    'O.B. Mann family & Mann Brothers grocery store'
   ];
 
   const searchSuggestions = ref([...featuredBuildings]);
@@ -106,6 +113,11 @@
       'fill-color': '#666666',
       'fill-opacity': 1
     },
+    poiFootprintsPaint : {
+      'fill-color': '#f37021',   // Orange for all POIs
+      'fill-opacity': 0.6,        // Semi-transparent, visible by default
+      'fill-outline-color': '#ffffff'
+    },
     burnedAreaPaint : {
       'fill-color': '#FF0000',
       'fill-opacity': 0.2
@@ -114,8 +126,7 @@
       'line-color': '#000000',
       'line-width': 2
     }
-
-  }
+  };
 
   // Create an array of FAB button properties
   //  based on the custom properties defined above
@@ -151,9 +162,17 @@
   const poiLayerRef = useTemplateRef('POILayerRef');
   const videoModalRef = useTemplateRef('videoModalRef');
   const census1920GeoJson = ref(emptyGeoJson);
-  const backendHost = import.meta.env.VITE_BACKEND_HOST;
+  // Auto-detect backend host based on deployment environment
+  // Vercel: use relative URLs (triggers Vercel proxy via rewrites)
+  // Linode: use direct backend URL
+  const backendHost = import.meta.env.VITE_BACKEND_HOST ||
+                      (window.location.hostname === 'gathering-greenwood.vercel.app' ? '' :
+                       window.location.hostname === 'localhost' ? 'http://localhost:3000' :
+                       `http://${window.location.hostname}`);
   const poiGeoJSON = ref(emptyGeoJson);
   const building1920GeoJSON = ref(emptyGeoJson);
+  const poiFootprintsGeoJSON = ref(emptyGeoJson);
+  const highlightedBuildingId = ref(null);
   const street1920GeoJSON = ref(emptyGeoJson);
   const burnedAreaGeoJSON = ref(emptyGeoJson);
 
@@ -177,6 +196,7 @@
 
   const dynamicLayers = [
     "poi-layer",
+    "poi-footprints-layer",
     "search-layer",
     "1920-building-layer",
     "1920-street-layer",
@@ -187,6 +207,7 @@
   const dynamicSources = [
     "search-source",
     "poi-source",
+    "poi-footprints-source",
     "1920-building-source",
     "1920-street-source",
     "1920-burned-area-source",
@@ -244,6 +265,86 @@
     console.log('Toggle high contrast mode');
   }
 
+  // Building Highlighting Functions
+  function highlightBuilding(buildingId) {
+    highlightedBuildingId.value = buildingId;
+    updatePOIFootprintHighlight();
+  }
+
+  function clearHighlight() {
+    highlightedBuildingId.value = null;
+    updatePOIFootprintHighlight();
+  }
+
+  function updatePOIFootprintHighlight() {
+    // Update Mapbox paint property when highlight changes
+    // Only update if map exists and POI footprints layer is loaded
+    if (!mbMap.value || !poiFootprintsGeoJSON.value?.data?.features?.length) {
+      return;
+    }
+
+    try {
+      // Check if layer exists before updating
+      const layer = mbMap.value.getLayer('poi-footprints-layer');
+      if (!layer) {
+        return;
+      }
+
+      // All POI footprints are visible; highlighted building is brighter
+      const fillColor = [
+        'case',
+        ['==', ['get', 'building_id'], highlightedBuildingId.value || -1],
+        '#FFCC00',  // Yellow when highlighted
+        '#f37021'   // Orange for all POIs
+      ];
+      const fillOpacity = [
+        'case',
+        ['==', ['get', 'building_id'], highlightedBuildingId.value || -1],
+        0.9,   // More opaque when highlighted
+        0.6    // Semi-transparent for all POIs by default
+      ];
+
+      mbMap.value.setPaintProperty('poi-footprints-layer', 'fill-color', fillColor);
+      mbMap.value.setPaintProperty('poi-footprints-layer', 'fill-opacity', fillOpacity);
+    } catch (error) {
+      // Silently ignore if layer doesn't exist yet
+      console.debug('POI footprints layer not ready for highlight update');
+    }
+
+    // Also update search result markers to highlight the selected building  
+    // Show yellow center with orange ring for highlighted result
+    try {
+      const searchLayer = mbMap.value.getLayer('search-layer');
+      if (searchLayer && geoJson.value?.data?.features?.length) {
+        // Create yellow center with orange stroke when highlighted
+        const circleColor = [
+          'case',
+          ['==', ['get', 'id'], highlightedBuildingId.value || -1],
+          '#FFCC00',  // Yellow center when highlighted
+          '#f37021'   // Orange fill for all search results
+        ];
+        const circleStrokeColor = [
+          'case',
+          ['==', ['get', 'id'], highlightedBuildingId.value || -1],
+          '#f37021',  // Orange stroke (ring) when highlighted
+          '#ffffff'   // White stroke for normal results
+        ];
+        const circleStrokeWidth = [
+          'case',
+          ['==', ['get', 'id'], highlightedBuildingId.value || -1],
+          4,    // Thicker orange ring when highlighted
+          3     // Normal white stroke
+        ];
+
+        mbMap.value.setPaintProperty('search-layer', 'circle-color', circleColor);
+        mbMap.value.setPaintProperty('search-layer', 'circle-stroke-color', circleStrokeColor);
+        mbMap.value.setPaintProperty('search-layer', 'circle-stroke-width', circleStrokeWidth);
+      }
+    } catch (error) {
+      console.debug('Search layer not ready for highlight update');
+    }
+  }
+
   // Event Handlers
   // Functions to handle events from child components
 
@@ -298,20 +399,28 @@
     mbMap.value = mapbMap;
     await getPOIs();
     await getBuildings();
+    await getPOIFootprints();
     await getStreets();
     await getBurnedArea();
 
-    // Add click handler to close search results when clicking on map background
+    // Add click handler to close detail drawers and reset map when clicking on map background
     mbMap.value.on('click', (e) => {
-      if (!showResults.value) return;
+      // Check if we clicked on any interactive layers (search results, POI building footprints)
+      // Only query layers that actually exist to avoid console warnings
+      const layersToCheck = ['search-layer', 'poi-footprints-layer', '1920-building-layer'].filter(layerId =>
+        mbMap.value.getLayer(layerId)
+      );
 
-      // Check if we clicked on our interactive layers (POIs, search results)
-      const layersToCheck = ['poi-layer', 'search-layer'];
+      // If no interactive layers exist, nothing to do
+      if (layersToCheck.length === 0) {
+        return;
+      }
+
       const features = mbMap.value.queryRenderedFeatures(e.point, {
         layers: layersToCheck
       });
 
-      // Only close search results if clicking on empty map (not on POI/search markers)
+      // If clicking on empty map (not on any markers/buildings), close drawers and zoom out
       if (features.length === 0) {
         handleDetailDrawerClose();
       }
@@ -328,15 +437,83 @@
     // census1920GeoJson.value = json;
   };
 
-  function formatFeature(feature) {
-    return {
-      id: feature.id || feature.properties.id || feature.properties.location_id,
+  async function formatFeature(feature) {
+    let properties = formatProperties(feature.properties, feature.source);
+
+    // If this is a POI footprint with only building_id, fetch full building data
+    if (properties.building_id && properties.is_poi && !properties.address) {
+      console.log('Fetching full building data for POI:', properties.building_id);
+      try {
+        const response = await fetch(`${backendHost}/api/search?search=${encodeURIComponent(properties.name || '')}`);
+
+        if (!response.ok) {
+          console.error('API request failed:', response.status, response.statusText);
+          throw new Error(`API returned ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Find the building in the response (GeoJSON format)
+        if (data.features && data.features.length > 0) {
+          const building = data.features.find(f =>
+            f.properties.id === properties.building_id
+          );
+
+          if (building && building.properties) {
+            // Merge building properties, keeping POI-specific props
+            const buildingProps = building.properties;
+            properties = {
+              ...properties,
+              id: buildingProps.id,
+              name: buildingProps.name || properties.name,
+              address: buildingProps.address,
+              year: buildingProps.year,
+              latitude: buildingProps.latitude,
+              longitude: buildingProps.longitude,
+              building_types: buildingProps.building_types,
+              confidence_score: buildingProps.confidence_score,
+              people: buildingProps.people || [],
+              census_records: buildingProps.census_records || [],
+              rich_description: buildingProps.rich_description,
+              rich_description_name: buildingProps.rich_description_name,
+              photo: buildingProps.photo,
+              location: buildingProps.location,
+              confidence_reasons: buildingProps.confidence_reasons || [],
+              type: buildingProps.type || 'building'
+            };
+            console.log('✅ Successfully loaded building data for POI:', properties.name);
+          } else {
+            console.warn('Building not found in API response for ID:', properties.building_id);
+          }
+        } else {
+          console.warn('API returned no features for POI search');
+        }
+      } catch (error) {
+        console.error('❌ Failed to fetch building details for POI:', error);
+        toast.error(`Failed to load details for ${properties.name || 'this building'}`);
+        return null; // Return null to prevent showing blank drawer
+      }
+    }
+
+    const formattedFeature = {
+      id: feature.id || feature.properties.id || feature.properties.location_id || properties.building_id,
+      name: properties.name,
+      address: properties.address,
+      year: properties.year,
       source: feature.source,
       layer: feature.layer,
       type: feature.type,
       geometry: feature.geometry,
-      properties: formatProperties(feature.properties, feature.source),
+      properties: properties,
+    };
+
+    // Ensure we have minimum required data before returning
+    if (!formattedFeature.properties || (!formattedFeature.name && !formattedFeature.address)) {
+      console.warn('Formatted feature missing required data:', formattedFeature);
+      return null;
     }
+
+    return formattedFeature;
   }
 
   function formatProperties(properties, source) {
@@ -427,11 +604,7 @@
         ...poiNames
       ]);
     })
-    .then(() => {
-      utils.delayedAction(
-          poiLayerRef.value.fitMapToMarkers,
-          1000);
-    })
+    // Don't auto-zoom to fit markers - let the initial bounding box handle the view
   };
 
   async function getBuildings() {
@@ -445,6 +618,20 @@
       building1920GeoJSON.value.data.id = '1920-building-source';
     } catch (error) {
       console.error('Error loading buildings data:', error);
+    }
+  };
+
+  async function getPOIFootprints() {
+    try {
+      const response = await fetch(`${import.meta.env.BASE_URL}poi-footprints.geojson`);
+      const data = await response.json();
+      poiFootprintsGeoJSON.value = {
+        type: 'geojson',
+        data: data
+      };
+      poiFootprintsGeoJSON.value.data.id = 'poi-footprints-source';
+    } catch (error) {
+      console.error('Error loading POI footprints:', error);
     }
   };
 
@@ -487,8 +674,38 @@
 
   function focusFeature(feature) {
     if (!feature || !mbMap.value) return;
+
+    // Highlight building if it has an ID
+    if (feature.properties?.id || feature.id || feature.properties?.building_id) {
+      const buildingId = feature.properties?.id || feature.id || feature.properties?.building_id;
+      highlightBuilding(buildingId);
+    }
+
+    const geomType = feature.geometry?.type;
     const coords = feature.geometry?.coordinates;
-    if (Array.isArray(coords) && coords.length === 2) {
+
+    // Handle Point geometry (POI markers, search results)
+    if (geomType === 'Point' && Array.isArray(coords) && coords.length === 2) {
+      const numericCoords = coords.map((c) => Number(c));
+      if (numericCoords.every((c) => Number.isFinite(c))) {
+        mbMap.value.flyTo({ center: numericCoords, zoom: 17 });
+      }
+    }
+    // Handle Polygon geometry (building footprints)
+    else if (geomType === 'Polygon' && Array.isArray(coords) && coords[0] && coords[0][0]) {
+      // Calculate centroid of polygon
+      const points = coords[0]; // Get outer ring
+      let sumLng = 0, sumLat = 0;
+      for (const point of points) {
+        sumLng += point[0];
+        sumLat += point[1];
+      }
+      const centerLng = sumLng / points.length;
+      const centerLat = sumLat / points.length;
+      mbMap.value.flyTo({ center: [centerLng, centerLat], zoom: 18 });
+    }
+    // Fallback: try to use coordinates directly if they look valid
+    else if (Array.isArray(coords) && coords.length === 2 && typeof coords[0] === 'number') {
       const numericCoords = coords.map((c) => Number(c));
       if (numericCoords.every((c) => Number.isFinite(c))) {
         mbMap.value.flyTo({ center: numericCoords, zoom: 17 });
@@ -498,10 +715,10 @@
 
   function resetMapView() {
     if (!mbMap.value) return;
-    // Zoom to Greenwood district (tighter view)
+    // Zoom to Greenwood district to show all POIs (fitBounds expects [southwest, northeast])
     mbMap.value.fitBounds([
-      [-95.980, 36.168],  // northeast - focused on Greenwood
-      [-95.994, 36.156]   // southwest
+      [-95.994, 36.156],  // southwest corner
+      [-95.980, 36.168]   // northeast corner
     ], {
       padding: 50,
       duration: 1000 // smooth animation
@@ -510,6 +727,7 @@
 
   async function handleDetailDrawerClose() {
     // Clear search results and reset map when detail drawer closes
+    clearHighlight();
     await clearResults();
     resetMapView();
   }
@@ -571,7 +789,7 @@
       :geojson="poiGeoJSON"
       :type="'circle'"
       :paint="markerPaintOptions['Points of Interest']"
-      :layout="{ 'visibility': 'visible'
+      :layout="{ 'visibility': 'none'
       }"
       layerId="poi-layer"
       :filterYear="appYear"
@@ -592,6 +810,20 @@
       :map="mbMap"
       :featureFormatter="formatFeature"
       :searchTerm="searchTerm"
+      @drawer-closed="handleDetailDrawerClose">
+    </DynamicGeoJsonLayer>
+    <DynamicGeoJsonLayer
+      v-if="poiFootprintsGeoJSON && poiFootprintsGeoJSON.data && poiFootprintsGeoJSON.data.features && poiFootprintsGeoJSON.data.features.length > 0"
+      ref="poiFootprintsLayerRef"
+      :geojson="poiFootprintsGeoJSON"
+      :type="'fill'"
+      :paint="markerPaintOptions['poiFootprintsPaint']"
+      :layout="{ 'visibility': 'visible' }"
+      layerId="poi-footprints-layer"
+      :filterYear="appYear"
+      :map="mbMap"
+      :featureFormatter="formatFeature"
+      @drawer-closed="handleDetailDrawerClose">
     </DynamicGeoJsonLayer>
     <DynamicGeoJsonLayer
       v-if="street1920GeoJSON && street1920GeoJSON.data && street1920GeoJSON.data.features && street1920GeoJSON.data.features.length > 0"
@@ -605,6 +837,7 @@
       :map="mbMap"
       :featureFormatter="formatFeature"
       :searchTerm="searchTerm"
+      @drawer-closed="handleDetailDrawerClose">
     </DynamicGeoJsonLayer>
     <DynamicGeoJsonLayer
       v-if="burnedAreaGeoJSON && burnedAreaGeoJSON.data && burnedAreaGeoJSON.data.features && burnedAreaGeoJSON.data.features.length > 0"
@@ -618,6 +851,7 @@
       :map="mbMap"
       :featureFormatter="formatFeature"
       :searchTerm="searchTerm"
+      @drawer-closed="handleDetailDrawerClose">
     </DynamicGeoJsonLayer>
     <!-- <DynamicGeoJsonLayer
       v-if="census1920GeoJson && census1920GeoJson.data && census1920GeoJson.data.features && census1920GeoJson.data.features.length > 0"
