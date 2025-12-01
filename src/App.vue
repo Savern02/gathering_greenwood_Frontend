@@ -311,24 +311,33 @@
       console.debug('POI footprints layer not ready for highlight update');
     }
 
-    // Also update search result markers to highlight the selected building
+    // Also update search result markers to highlight the selected building  
+    // Show yellow center with orange ring for highlighted result
     try {
       const searchLayer = mbMap.value.getLayer('search-layer');
       if (searchLayer && geoJson.value?.data?.features?.length) {
+        // Create yellow center with orange stroke when highlighted
         const circleColor = [
           'case',
           ['==', ['get', 'id'], highlightedBuildingId.value || -1],
-          '#FFCC00',  // Yellow when highlighted
-          '#f37021'   // Orange for all search results
+          '#FFCC00',  // Yellow center when highlighted
+          '#f37021'   // Orange fill for all search results
+        ];
+        const circleStrokeColor = [
+          'case',
+          ['==', ['get', 'id'], highlightedBuildingId.value || -1],
+          '#f37021',  // Orange stroke (ring) when highlighted
+          '#ffffff'   // White stroke for normal results
         ];
         const circleStrokeWidth = [
           'case',
           ['==', ['get', 'id'], highlightedBuildingId.value || -1],
-          5,    // Thicker stroke when highlighted
-          3     // Normal stroke
+          4,    // Thicker orange ring when highlighted
+          3     // Normal white stroke
         ];
 
         mbMap.value.setPaintProperty('search-layer', 'circle-color', circleColor);
+        mbMap.value.setPaintProperty('search-layer', 'circle-stroke-color', circleStrokeColor);
         mbMap.value.setPaintProperty('search-layer', 'circle-stroke-width', circleStrokeWidth);
       }
     } catch (error) {

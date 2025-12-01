@@ -206,7 +206,7 @@
     width: var(--results-width);
     height: var(--results-height);
     background: var(--gcc-white);
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     color: #333;
     overflow-y: hidden;
     border-left: var(--gcc-dk-green) .2rem solid;
@@ -214,32 +214,54 @@
     top: 0;
     right: 0;
     z-index: 1000;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .results-pane :deep(h2),
+  .results-pane :deep(h3) {
+    font-size: 1.1rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .results-pane :deep(h4) {
+    font-size: 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .results-pane :deep(p) {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
   }
 
   .close-results {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: none;
-    color: #333;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: var(--gcc-dk-green);
+    color: white;
     border: none;
-    width: 1.5rem;
-    height: 1.5rem;
-    font-size: 1.2rem;
-    font-weight: normal;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+    font-weight: bold;
     line-height: 1;
+    border-radius: 0.375rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 100;
     padding: 0;
-    transition: opacity 0.2s ease;
-    opacity: 0.6;
+    transition: all 0.2s ease;
   }
 
   .close-results:hover {
-    opacity: 1;
+    background-color: var(--gcc-orange);
+    transform: scale(1.05);
   }
 
   .spinner-container {
@@ -261,6 +283,35 @@
   @keyframes spin {
     to {
       transform: rotate(360deg);
+    }
+  }
+
+  /* Responsive adjustments to match DetailDrawer */
+  @media (max-width: 1024px) {
+    .results-pane {
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .results-pane {
+      font-size: 0.8rem;
+      padding: 0.75rem;
+    }
+
+    .results-pane :deep(h2),
+    .results-pane :deep(h3) {
+      font-size: 1rem;
+    }
+
+    .results-pane :deep(h4) {
+      font-size: 0.9rem;
+    }
+
+    .close-results {
+      width: 1.75rem;
+      height: 1.75rem;
+      font-size: 0.9rem;
     }
   }
 </style>
