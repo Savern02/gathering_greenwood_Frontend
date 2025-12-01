@@ -372,9 +372,9 @@
 
     // Add click handler to close detail drawers and reset map when clicking on map background
     mbMap.value.on('click', (e) => {
-      // Check if we clicked on any interactive layers (POIs, search results, building footprints)
+      // Check if we clicked on any interactive layers (search results, POI building footprints)
       // Only query layers that actually exist to avoid console warnings
-      const layersToCheck = ['poi-layer', 'search-layer', 'poi-footprints-layer', '1920-building-layer'].filter(layerId =>
+      const layersToCheck = ['search-layer', 'poi-footprints-layer', '1920-building-layer'].filter(layerId =>
         mbMap.value.getLayer(layerId)
       );
 
@@ -756,7 +756,7 @@
       :geojson="poiGeoJSON"
       :type="'circle'"
       :paint="markerPaintOptions['Points of Interest']"
-      :layout="{ 'visibility': 'visible'
+      :layout="{ 'visibility': 'none'
       }"
       layerId="poi-layer"
       :filterYear="appYear"
