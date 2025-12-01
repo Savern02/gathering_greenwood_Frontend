@@ -40,9 +40,9 @@
   const style = ref(`${import.meta.env.BASE_URL}historic.json`);
   const center = ref([-95.9872222, 36.1619444]); // starting position [lng, lat]
 
-  // Define the bounding box for the map (Mapbox expects [southwest, northeast])
-  const southWestCorner = ref([-96.00696406942987, 36.149196492004265]); // southwest corner (westernmost, southernmost)
-  const northEastCorner = ref([-95.96760908092702, 36.17461225060711]); // northeast corner (easternmost, northernmost)
+  // Define the bounding box for the map - focused on Greenwood district (Mapbox expects [southwest, northeast])
+  const southWestCorner = ref([-95.994, 36.156]); // southwest corner - focused on Greenwood
+  const northEastCorner = ref([-95.980, 36.168]); // northeast corner - focused on Greenwood
   const boundingBox = ref([southWestCorner.value, northEastCorner.value]);
 
   // Define max bounds for the map
