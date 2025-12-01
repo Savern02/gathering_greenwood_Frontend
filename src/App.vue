@@ -687,10 +687,10 @@
 
   function resetMapView() {
     if (!mbMap.value) return;
-    // Zoom to Greenwood district (tighter view)
+    // Zoom to Greenwood district to show all POIs (fitBounds expects [southwest, northeast])
     mbMap.value.fitBounds([
-      [-95.980, 36.168],  // northeast - focused on Greenwood
-      [-95.994, 36.156]   // southwest
+      [-95.994, 36.156],  // southwest corner
+      [-95.980, 36.168]   // northeast corner
     ], {
       padding: 50,
       duration: 1000 // smooth animation

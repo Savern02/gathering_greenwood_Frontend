@@ -40,10 +40,10 @@
   const style = ref(`${import.meta.env.BASE_URL}historic.json`);
   const center = ref([-95.9872222, 36.1619444]); // starting position [lng, lat]
 
-  // Define the bounding box for the map
-  const northEastCorner = ref([-95.96760908092702, 36.17461225060711]); // northwest corner of the bounding box
-  const southWestCorner = ref([-96.00696406942987, 36.149196492004265]); // southeast corner of the bounding box
-  const boundingBox = ref([northEastCorner.value, southWestCorner.value]);
+  // Define the bounding box for the map (Mapbox expects [southwest, northeast])
+  const southWestCorner = ref([-96.00696406942987, 36.149196492004265]); // southwest corner (westernmost, southernmost)
+  const northEastCorner = ref([-95.96760908092702, 36.17461225060711]); // northeast corner (easternmost, northernmost)
+  const boundingBox = ref([southWestCorner.value, northEastCorner.value]);
 
   // Define max bounds for the map
   // These bounds are set to the northwest and southeast corners of the bounding box
